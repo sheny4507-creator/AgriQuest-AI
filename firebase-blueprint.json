@@ -1,0 +1,101 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Farmer profile, XP, AgriQuest coins, earned badges, and completed learning milestones",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Authenticated user UID" },
+        "displayName": { "type": "string", "description": "Farmer display name" },
+        "xp": { "type": "integer", "description": "Total AgriQuest experience points" },
+        "coins": { "type": "integer", "description": "Virtual farm coins earned" },
+        "streakDays": { "type": "integer", "description": "Daily farming streak count" },
+        "preferredRegion": { "type": "string", "description": "Selected Philippine agricultural region for Weather Watch" },
+        "completedChallenges": { "type": "array", "description": "IDs of completed AgriQuest scenarios and quizzes" },
+        "earnedBadges": { "type": "array", "description": "Unlocked AgriQuest badge IDs" },
+        "studiedGuides": { "type": "array", "description": "IDs of Smart Farming Guide topics studied" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp on creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp on update" }
+      },
+      "required": ["userId", "displayName", "xp", "coins", "streakDays", "preferredRegion", "completedChallenges", "earnedBadges", "studiedGuides", "createdAt", "updatedAt"]
+    },
+    "FarmBudget": {
+      "title": "FarmBudget",
+      "description": "Saved Philippine Peso farm budget calculation with expenses, gross income, and net profit",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "cropName": { "type": "string" },
+        "farmAreaLabel": { "type": "string" },
+        "seedsCost": { "type": "number" },
+        "fertilizerCost": { "type": "number" },
+        "pestControlCost": { "type": "number" },
+        "laborCost": { "type": "number" },
+        "otherCost": { "type": "number" },
+        "expectedYieldKg": { "type": "number" },
+        "pricePerKg": { "type": "number" },
+        "totalExpense": { "type": "number" },
+        "grossIncome": { "type": "number" },
+        "netProfit": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "cropName", "farmAreaLabel", "seedsCost", "fertilizerCost", "pestControlCost", "laborCost", "otherCost", "expectedYieldKg", "pricePerKg", "totalExpense", "grossIncome", "netProfit", "createdAt", "updatedAt"]
+    },
+    "FarmPlot": {
+      "title": "FarmPlot",
+      "description": "Virtual farm crop plot state and care metrics",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "plotIndex": { "type": "integer" },
+        "cropId": { "type": "string" },
+        "cropName": { "type": "string" },
+        "growthStage": { "type": "integer" },
+        "waterLevel": { "type": "integer" },
+        "soilHealth": { "type": "integer" },
+        "pestProtected": { "type": "boolean" },
+        "harvestCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "plotIndex", "cropId", "cropName", "growthStage", "waterLevel", "soilHealth", "pestProtected", "harvestCount", "createdAt", "updatedAt"]
+    },
+    "PlantScan": {
+      "title": "PlantScan",
+      "description": "AI Plant Doctor crop disease/pest diagnosis record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "cropName": { "type": "string" },
+        "conditionName": { "type": "string" },
+        "severity": { "type": "string", "enum": ["Low", "Moderate", "High"] },
+        "summary": { "type": "string" },
+        "organicSolutions": { "type": "array" },
+        "preventionTips": { "type": "array" },
+        "demoMode": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "cropName", "conditionName", "severity", "summary", "organicSolutions", "preventionTips", "demoMode", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Per-user AgriQuest profile, XP, coins, badges, and preferences"
+    },
+    "/users/{userId}/budgets/{budgetId}": {
+      "schema": { "$ref": "#/entities/FarmBudget" },
+      "description": "Saved Philippine Peso farm budget calculations for a user"
+    },
+    "/users/{userId}/farmPlots/{plotId}": {
+      "schema": { "$ref": "#/entities/FarmPlot" },
+      "description": "Virtual farm plot state for a user"
+    },
+    "/users/{userId}/plantScans/{scanId}": {
+      "schema": { "$ref": "#/entities/PlantScan" },
+      "description": "Saved AI Plant Doctor diagnosis records for a user"
+    }
+  }
+}

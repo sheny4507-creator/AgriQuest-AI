@@ -1,0 +1,176 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.xp is int && data.xp >= 0 && data.xp <= 1000000 &&
+             data.coins is int && data.coins >= 0 && data.coins <= 1000000 &&
+             data.streakDays is int && data.streakDays >= 0 && data.streakDays <= 10000 &&
+             data.preferredRegion is string && data.preferredRegion.size() >= 1 && data.preferredRegion.size() <= 60 &&
+             data.completedChallenges is list && data.completedChallenges.size() <= 50 &&
+             (data.completedChallenges.size() == 0 || data.completedChallenges[0] is string) &&
+             data.earnedBadges is list && data.earnedBadges.size() <= 30 &&
+             (data.earnedBadges.size() == 0 || data.earnedBadges[0] is string) &&
+             data.studiedGuides is list && data.studiedGuides.size() <= 50 &&
+             (data.studiedGuides.size() == 0 || data.studiedGuides[0] is string) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidBudget(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.cropName is string && data.cropName.size() >= 1 && data.cropName.size() <= 60 &&
+             data.farmAreaLabel is string && data.farmAreaLabel.size() >= 1 && data.farmAreaLabel.size() <= 40 &&
+             data.seedsCost is number && data.seedsCost >= 0 && data.seedsCost <= 100000000 &&
+             data.fertilizerCost is number && data.fertilizerCost >= 0 && data.fertilizerCost <= 100000000 &&
+             data.pestControlCost is number && data.pestControlCost >= 0 && data.pestControlCost <= 100000000 &&
+             data.laborCost is number && data.laborCost >= 0 && data.laborCost <= 100000000 &&
+             data.otherCost is number && data.otherCost >= 0 && data.otherCost <= 100000000 &&
+             data.expectedYieldKg is number && data.expectedYieldKg >= 0 && data.expectedYieldKg <= 10000000 &&
+             data.pricePerKg is number && data.pricePerKg >= 0 && data.pricePerKg <= 1000000 &&
+             data.totalExpense is number && data.totalExpense >= 0 && data.totalExpense <= 500000000 &&
+             data.grossIncome is number && data.grossIncome >= 0 && data.grossIncome <= 1000000000 &&
+             data.netProfit is number && data.netProfit >= -500000000 && data.netProfit <= 1000000000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidFarmPlot(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.plotIndex is int && data.plotIndex >= 0 && data.plotIndex <= 3 &&
+             data.cropId is string && data.cropId.size() >= 1 && data.cropId.size() <= 40 &&
+             data.cropName is string && data.cropName.size() >= 1 && data.cropName.size() <= 60 &&
+             data.growthStage is int && data.growthStage >= 0 && data.growthStage <= 3 &&
+             data.waterLevel is int && data.waterLevel >= 0 && data.waterLevel <= 100 &&
+             data.soilHealth is int && data.soilHealth >= 0 && data.soilHealth <= 100 &&
+             data.pestProtected is bool &&
+             data.harvestCount is int && data.harvestCount >= 0 && data.harvestCount <= 100000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPlantScan(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.cropName is string && data.cropName.size() >= 1 && data.cropName.size() <= 60 &&
+             data.conditionName is string && data.conditionName.size() >= 1 && data.conditionName.size() <= 120 &&
+             data.severity in ['Low', 'Moderate', 'High'] &&
+             data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 800 &&
+             data.organicSolutions is list && data.organicSolutions.size() <= 10 &&
+             (data.organicSolutions.size() == 0 || data.organicSolutions[0] is string) &&
+             data.preventionTips is list && data.preventionTips.size() <= 10 &&
+             (data.preventionTips.size() == 0 || data.preventionTips[0] is string) &&
+             data.demoMode is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+
+      allow create: if isValidId(userId) &&
+                       isOwner(userId) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'xp', 'coins', 'streakDays', 'preferredRegion', 'completedChallenges', 'earnedBadges', 'studiedGuides', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'xp', 'coins', 'streakDays', 'preferredRegion', 'completedChallenges', 'earnedBadges', 'studiedGuides', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming(), userId);
+
+      allow update: if isValidId(userId) &&
+                       isOwner(userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'xp', 'coins', 'streakDays', 'preferredRegion', 'completedChallenges', 'earnedBadges', 'studiedGuides', 'updatedAt']);
+
+      allow delete: if isValidId(userId) && isOwner(userId);
+
+      match /budgets/{budgetId} {
+        allow get: if isValidId(userId) && isValidId(budgetId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+
+        allow create: if isValidId(userId) &&
+                         isValidId(budgetId) &&
+                         isOwner(userId) &&
+                         incoming().keys().hasAll(['userId', 'cropName', 'farmAreaLabel', 'seedsCost', 'fertilizerCost', 'pestControlCost', 'laborCost', 'otherCost', 'expectedYieldKg', 'pricePerKg', 'totalExpense', 'grossIncome', 'netProfit', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'cropName', 'farmAreaLabel', 'seedsCost', 'fertilizerCost', 'pestControlCost', 'laborCost', 'otherCost', 'expectedYieldKg', 'pricePerKg', 'totalExpense', 'grossIncome', 'netProfit', 'createdAt', 'updatedAt']) &&
+                         isValidBudget(incoming(), userId);
+
+        allow update: if isValidId(userId) &&
+                         isValidId(budgetId) &&
+                         isOwner(userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidBudget(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['cropName', 'farmAreaLabel', 'seedsCost', 'fertilizerCost', 'pestControlCost', 'laborCost', 'otherCost', 'expectedYieldKg', 'pricePerKg', 'totalExpense', 'grossIncome', 'netProfit', 'updatedAt']);
+
+        allow delete: if isValidId(userId) && isValidId(budgetId) && isOwner(userId);
+      }
+
+      match /farmPlots/{plotId} {
+        allow get: if isValidId(userId) && isValidId(plotId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+
+        allow create: if isValidId(userId) &&
+                         isValidId(plotId) &&
+                         isOwner(userId) &&
+                         incoming().keys().hasAll(['userId', 'plotIndex', 'cropId', 'cropName', 'growthStage', 'waterLevel', 'soilHealth', 'pestProtected', 'harvestCount', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'plotIndex', 'cropId', 'cropName', 'growthStage', 'waterLevel', 'soilHealth', 'pestProtected', 'harvestCount', 'createdAt', 'updatedAt']) &&
+                         isValidFarmPlot(incoming(), userId);
+
+        allow update: if isValidId(userId) &&
+                         isValidId(plotId) &&
+                         isOwner(userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidFarmPlot(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['cropId', 'cropName', 'growthStage', 'waterLevel', 'soilHealth', 'pestProtected', 'harvestCount', 'updatedAt']);
+
+        allow delete: if isValidId(userId) && isValidId(plotId) && isOwner(userId);
+      }
+
+      match /plantScans/{scanId} {
+        allow get: if isValidId(userId) && isValidId(scanId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+
+        allow create: if isValidId(userId) &&
+                         isValidId(scanId) &&
+                         isOwner(userId) &&
+                         incoming().keys().hasAll(['userId', 'cropName', 'conditionName', 'severity', 'summary', 'organicSolutions', 'preventionTips', 'demoMode', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'cropName', 'conditionName', 'severity', 'summary', 'organicSolutions', 'preventionTips', 'demoMode', 'createdAt', 'updatedAt']) &&
+                         isValidPlantScan(incoming(), userId);
+
+        allow update: if false;
+        allow delete: if isValidId(userId) && isValidId(scanId) && isOwner(userId);
+      }
+    }
+  }
+}

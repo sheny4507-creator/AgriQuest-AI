@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="firestore_database_id" translatable="false">ai-studio-android-agriques-f9fc2015-cabc-456e-aaaf-2d76319c4ab7</string>
+    <string name="recaptcha_site_key" translatable="false">6LdvUy4uAAAAALeGREFRk2QphPn3s5zp7MslbmFy</string>
+</resources>

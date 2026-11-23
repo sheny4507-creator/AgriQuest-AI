@@ -1,0 +1,8 @@
+{
+  "name": "AgriQuest AI",
+  "description": "Smart farming assistant, AI Plant Doctor, Weather Watch, Philippine Peso Farm Budget Challenge, and interactive AgriQuest game for Filipino farmers and students.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
